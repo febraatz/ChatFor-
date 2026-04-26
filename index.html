@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0d0d">
+<title>CS Desk · Chatfor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --lime:#99ea48; --lime-10:#f0fce0; --lime-20:#d4f5a0; --lime-70:#6bc420;
+  --carbon:#0d0d0d; --carbon-80:#1a1a1a; --carbon-60:#333333;
+  --snow:#fafafa; --n50:#737373; --n30:#b3b3b3; --n10:#f0f0f0; --border:#e5e5e5;
+  --success:#22c55e; --success-bg:#f0fdf4;
+  --warning:#f59e0b; --warning-bg:#fffbeb;
+  --error:#ef4444; --error-bg:#fef2f2;
+  --fs:'Plus Jakarta Sans',sans-serif; --fd:'Space Grotesk',sans-serif; --fm:'JetBrains Mono',monospace;
+  --r6:6px; --r10:10px; --r14:14px; --r20:20px; --rpill:9999px;
+  --sh1:0 2px 8px rgba(0,0,0,0.06); --sh2:0 4px 24px rgba(0,0,0,0.12);
+  --t1:120ms; --t2:220ms; --ease:cubic-bezier(.4,0,.2,1);
+}
+html,body{height:100%;overflow:hidden;background:var(--carbon);}
+body{font-family:var(--fs);font-size:15px;color:var(--carbon);touch-action:manipulation;}
+
+/* ─── SCREENS ─── */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--snow);transition:transform var(--t2) var(--ease),opacity var(--t2) var(--ease);}
+.screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none;}
+.screen.slide-left{transform:translateX(-30%);opacity:0;pointer-events:none;}
+
+/* ─── STATUS BAR SAFE AREA ─── */
+.safe-top{padding-top:env(safe-area-inset-top,0px);}
+.safe-bot{padding-bottom:env(safe-area-inset-bottom,16px);}
+
+/* ─── HEADER ─── */
+.hdr{background:var(--carbon);color:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:58px;}
+.hdr-logo{display:flex;align-items:center;gap:8px;flex:1;}
+.hdr-icon{width:30px;height:30px;background:var(--lime);border-radius:var(--r6);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hdr-icon svg{width:16px;height:16px;stroke:var(--carbon);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+.hdr-title{font-size:16px;font-weight:800;color:#fff;}
+.hdr-sub{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lime);margin-left:4px;}
+.hdr-btn{width:36px;height:36px;border-radius:var(--r6);border:none;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--t1);flex-shrink:0;}
+.hdr-btn:active{background:rgba(255,255,255,.16);}
+.hdr-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.hdr-back{display:flex;align-items:center;gap:6px;background:none;border:none;color:#fff;font-family:var(--fs);font-size:14px;font-weight:700;cursor:pointer;padding:4px 0;}
+.hdr-back svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ─── STATS BAR ─── */
+.stats-bar{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--carbon-80);border-bottom:1px solid rgba(255,255,255,.06);}
+.stat-cell{padding:10px 8px;text-align:center;}
+.stat-n{font-family:var(--fd);font-size:24px;font-weight:700;line-height:1;}
+.stat-n.s{color:var(--lime);} .stat-n.a{color:var(--warning);} .stat-n.r{color:var(--error);}
+.stat-l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--n50);margin-top:3px;}
+
+/* ─── UPLOAD CARD ─── */
+.upload-card{margin:16px;border:2px dashed rgba(153,234,72,.3);border-radius:var(--r14);padding:20px 16px;text-align:center;cursor:pointer;transition:all var(--t1) var(--ease);background:rgba(153,234,72,.03);active-bg:rgba(153,234,72,.08);}
+.upload-card:active{border-color:var(--lime);background:rgba(153,234,72,.08);}
+.upload-card input{display:none;}
+.uc-icon{width:44px;height:44px;background:rgba(153,234,72,.12);border-radius:var(--r10);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+.uc-icon svg{width:22px;height:22px;stroke:var(--lime);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.uc-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;}
+.uc-sub{font-size:12px;color:var(--n50);line-height:1.5;}
+.uc-pills{display:flex;gap:6px;justify-content:center;margin-top:10px;}
+.uc-pill{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 10px;border-radius:var(--rpill);background:rgba(255,255,255,.08);color:var(--n30);}
+
+/* ─── PROGRESS ─── */
+.prog-wrap{padding:0 16px 8px;}
+.prog-lbl{font-size:11px;font-weight:700;color:var(--n50);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+.prog-bar{height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--lime);border-radius:2px;transition:width var(--t2) var(--ease);}
+
+/* ─── SEARCH ─── */
+.search-wrap{padding:0 16px 10px;}
+.search-wrap input{width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);border-radius:var(--r10);padding:10px 14px;color:#fff;font-family:var(--fs);font-size:14px;outline:none;transition:border-color var(--t1);}
+.search-wrap input:focus{border-color:var(--lime);}
+.search-wrap input::placeholder{color:var(--n50);}
+
+/* ─── CLIENT LIST ─── */
+.client-list{flex:1;overflow-y:auto;padding:0 8px 16px;-webkit-overflow-scrolling:touch;}
+.client-list::-webkit-scrollbar{display:none;}
+
+.ci{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--r10);cursor:pointer;transition:background var(--t1);border:1px solid transparent;margin-bottom:4px;}
+.ci:active{background:rgba(153,234,72,.08);border-color:rgba(153,234,72,.2);}
+.ci.active{background:rgba(153,234,72,.08);border-color:rgba(153,234,72,.25);}
+.ci-av{width:42px;height:42px;border-radius:var(--r10);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;}
+.ci-body{flex:1;min-width:0;}
+.ci-name{font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-prev{font-size:12px;color:var(--n50);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:var(--r6);}
+.badge.s{background:var(--lime-20);color:var(--lime-70);}
+.badge.a{background:#fef3c7;color:#92400e;}
+.badge.r{background:#fee2e2;color:#b91c1c;}
+.ci-time{font-size:10px;color:var(--n50);font-family:var(--fm);}
+.ci-new{width:8px;height:8px;border-radius:50%;background:var(--lime);}
+
+/* ─── EMPTY LIST ─── */
+.empty-list{padding:32px 16px;text-align:center;}
+.empty-list-icon{font-size:40px;margin-bottom:12px;opacity:.4;}
+.empty-list-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:6px;}
+.empty-list-sub{font-size:13px;color:var(--n50);line-height:1.6;}
+
+/* ─── DETAIL SCREEN ─── */
+#screenDetail{background:var(--snow);}
+.detail-hdr{background:var(--carbon);padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.detail-av{width:38px;height:38px;border-radius:var(--r6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;}
+.detail-info{flex:1;min-width:0;}
+.detail-name{font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.detail-sub{font-size:11px;color:var(--n50);margin-top:1px;font-family:var(--fm);}
+.detail-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;}
+.detail-body::-webkit-scrollbar{display:none;}
+
+/* ─── CARDS ─── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r14);padding:16px;margin-bottom:12px;box-shadow:var(--sh1);}
+.card-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--n50);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.card-lbl-accent{color:var(--lime-70);}
+
+/* ─── AI BOX ─── */
+.ai-box{background:var(--lime-10);border:1px solid var(--lime-20);border-left:4px solid var(--lime);border-radius:var(--r10);padding:14px;}
+.ai-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lime-70);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--lime);animation:blink 1.8s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.ai-text{font-size:14px;line-height:1.7;color:var(--carbon-60);}
+
+/* ─── TAGS ─── */
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:var(--r6);}
+.tag.ok{background:var(--lime-20);color:var(--lime-70);}
+.tag.warn{background:#fef3c7;color:#92400e;}
+.tag.hot{background:#fee2e2;color:#b91c1c;}
+.tag.neu{background:var(--n10);color:var(--n50);}
+
+/* ─── KPI ─── */
+.kpi-card{background:var(--carbon);border-radius:var(--r14);padding:16px;margin-bottom:12px;}
+.kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--n50);margin-bottom:6px;}
+.kpi-row{display:flex;align-items:flex-end;gap:8px;}
+.kpi-n{font-family:var(--fd);font-size:48px;font-weight:700;color:var(--lime);line-height:1;}
+.kpi-of{font-size:14px;color:var(--n50);margin-bottom:6px;}
+.health-bar{height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:10px;overflow:hidden;}
+.health-fill{height:100%;border-radius:2px;transition:width .6s var(--ease);}
+
+/* ─── INFO ROWS ─── */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.info-row:last-child{border-bottom:none;}
+.info-k{font-size:13px;color:var(--n50);}
+.info-v{font-size:13px;font-weight:700;color:var(--carbon);text-align:right;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ─── TIMELINE ─── */
+.tl-item{display:flex;gap:10px;padding-bottom:14px;position:relative;}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:14px;top:30px;width:1px;height:calc(100% - 14px);background:var(--border);}
+.tl-dot{width:28px;height:28px;border-radius:var(--r6);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tl-dot svg{width:13px;height:13px;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+.tl-dot.msg{background:var(--n10);}
+.tl-dot.msg svg{stroke:var(--n50);}
+.tl-dot.ai{background:var(--lime-10);}
+.tl-dot.ai svg{stroke:var(--lime-70);}
+.tl-who{font-size:12px;font-weight:700;color:var(--carbon);}
+.tl-msg{font-size:12px;color:var(--n50);margin-top:2px;line-height:1.5;}
+.tl-time{font-size:11px;color:var(--n30);margin-top:2px;font-family:var(--fm);}
+
+/* ─── ALERT ─── */
+.alert-item{border-radius:var(--r10);padding:12px;margin-bottom:8px;border-left:4px solid;display:flex;gap:10px;align-items:flex-start;}
+.alert-item.r{background:var(--error-bg);border-color:var(--error);}
+.alert-item.a{background:var(--warning-bg);border-color:var(--warning);}
+.alert-item svg{width:15px;height:15px;flex-shrink:0;margin-top:1px;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+.alert-item.r svg{stroke:var(--error);}
+.alert-item.a svg{stroke:var(--warning);}
+.alert-text{font-size:13px;color:var(--carbon-60);line-height:1.5;}
+
+/* ─── SUGGESTION ─── */
+.sug-box{background:var(--n10);border-radius:var(--r10);padding:14px;margin-bottom:10px;}
+.sug-text{font-size:13px;line-height:1.7;color:var(--carbon-60);white-space:pre-wrap;}
+.sug-actions{display:flex;gap:8px;margin-top:12px;}
+
+/* ─── BUTTONS ─── */
+.btn{padding:11px 20px;border-radius:var(--rpill);font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:var(--fs);transition:all var(--t1) var(--ease);letter-spacing:-.01em;display:inline-flex;align-items:center;gap:6px;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--lime);color:var(--carbon);}
+.btn-primary:active{background:var(--lime-70);color:#fff;}
+.btn-outline{background:transparent;color:var(--carbon);border:1.5px solid var(--carbon);}
+.btn-outline:active{background:var(--carbon);color:#fff;}
+.btn-ghost{background:var(--n10);color:var(--n50);border:none;}
+.btn-ghost:active{background:var(--border);color:var(--carbon);}
+.btn-danger{background:var(--error-bg);color:var(--error);border:1px solid #fecaca;}
+.btn-sm{padding:8px 14px;font-size:12px;}
+.btn-full{width:100%;justify-content:center;}
+
+/* ─── BOTTOM ACTION BAR ─── */
+.bottom-bar{background:#fff;border-top:1px solid var(--border);padding:10px 16px;display:flex;gap:8px;align-items:center;}
+.reply-input{flex:1;background:var(--n10);border:1.5px solid var(--border);border-radius:var(--rpill);padding:10px 16px;color:var(--carbon);font-family:var(--fs);font-size:14px;outline:none;transition:border-color var(--t1);}
+.reply-input:focus{border-color:var(--lime);}
+.reply-input::placeholder{color:var(--n30);}
+
+/* ─── MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(13,13,13,.7);display:flex;align-items:flex-end;justify-content:center;z-index:200;padding:0;}
+.modal-overlay.center{align-items:center;padding:16px;}
+.modal-sheet{background:#fff;border-radius:var(--r20) var(--r20) 0 0;padding:24px 20px 32px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-sheet.center-card{border-radius:var(--r20);max-width:420px;width:100%;}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+.modal-title{font-size:20px;font-weight:800;color:var(--carbon);margin-bottom:6px;}
+.modal-sub{font-size:14px;color:var(--n50);line-height:1.6;margin-bottom:20px;}
+.field-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--n50);margin-bottom:6px;display:block;}
+.field-input{width:100%;background:var(--snow);border:1.5px solid var(--border);border-radius:var(--r10);padding:12px 14px;color:var(--carbon);font-family:var(--fm);font-size:14px;outline:none;margin-bottom:8px;transition:border-color var(--t1);}
+.field-input:focus{border-color:var(--lime);box-shadow:0 0 0 3px rgba(153,234,72,.2);}
+.field-note{font-size:12px;color:var(--n50);line-height:1.6;margin-bottom:16px;}
+.field-note a{color:var(--lime-70);font-weight:700;text-decoration:none;}
+
+/* ─── PROVIDER SELECTOR ─── */
+.prov-row{display:flex;gap:8px;margin-bottom:20px;}
+.prov-btn{flex:1;padding:12px 8px;border-radius:var(--r10);border:1.5px solid var(--border);background:#fff;cursor:pointer;text-align:center;transition:all var(--t1) var(--ease);font-family:var(--fs);}
+.prov-btn:active,.prov-btn.active{border-color:var(--lime);background:var(--lime-10);}
+.prov-btn .pn{font-size:14px;font-weight:800;color:var(--carbon);margin-top:6px;}
+.prov-btn .ps{font-size:11px;color:var(--n50);margin-top:2px;}
+.prov-panel{display:none;}
+.prov-panel.active{display:block;}
+
+/* ─── SETTINGS SCREEN ─── */
+#screenSettings{background:var(--snow);}
+.settings-section{padding:16px 16px 0;}
+.settings-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--n50);margin-bottom:10px;}
+.settings-row{background:#fff;border-radius:var(--r10);padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);}
+.settings-row-left{display:flex;flex-direction:column;gap:2px;}
+.settings-row-key{font-size:14px;font-weight:700;color:var(--carbon);}
+.settings-row-val{font-size:12px;color:var(--n50);font-family:var(--fm);}
+.settings-row-action{font-size:13px;font-weight:700;color:var(--lime-70);cursor:pointer;}
+
+/* ─── HISTORY BADGE ─── */
+.hist-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:var(--rpill);background:rgba(153,234,72,.15);color:var(--lime);margin-left:auto;}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp var(--t2) var(--ease) both;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     SCREEN 1: LISTA DE CLIENTES
+══════════════════════════════════ -->
+<div class="screen safe-top" id="screenList">
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-logo">
+      <div class="hdr-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <span class="hdr-title">CS Desk</span>
+      <span class="hdr-sub">Chatfor</span>
+    </div>
+    <button class="hdr-btn" onclick="openSettings()" title="Configurações">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-cell"><div class="stat-n s" id="cntS">0</div><div class="stat-l">Saudável</div></div>
+    <div class="stat-cell"><div class="stat-n a" id="cntA">0</div><div class="stat-l">Atenção</div></div>
+    <div class="stat-cell"><div class="stat-n r" id="cntR">0</div><div class="stat-l">Risco</div></div>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-card" id="dropZone" onclick="document.getElementById('fileInput').click()"
+       ondragover="event.preventDefault();this.style.borderColor='var(--lime)'"
+       ondragleave="this.style.borderColor=''"
+       ondrop="handleDrop(event)">
+    <input type="file" id="fileInput" accept=".txt,.zip" multiple onchange="handleFiles(this.files)">
+    <div class="uc-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <div class="uc-title">Subir conversa do grupo</div>
+    <div class="uc-sub">WhatsApp → 3 pontinhos → Exportar → Sem mídia</div>
+    <div class="uc-pills"><span class="uc-pill">.zip</span><span class="uc-pill">.txt</span></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-wrap" id="progressWrap" style="display:none">
+    <div class="prog-lbl" id="progLabel">Analisando...</div>
+    <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <input type="text" placeholder="Buscar cliente..." oninput="filterClients(this.value)" autocomplete="off" autocorrect="off">
+  </div>
+
+  <!-- Client list -->
+  <div class="client-list safe-bot" id="clientList"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 2: DETALHE DO CLIENTE
+══════════════════════════════════ -->
+<div class="screen hidden safe-top" id="screenDetail">
+  <div class="detail-hdr">
+    <button class="hdr-back" onclick="goBack()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Clientes
+    </button>
+    <div id="detailHeaderInfo" style="flex:1;min-width:0;margin-left:8px;"></div>
+    <button class="hdr-btn" onclick="openClientMenu()" title="Mais opções">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    </button>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+  <div class="bottom-bar safe-bot">
+    <input class="reply-input" placeholder="Escrever resposta..." id="replyInput" autocomplete="off">
+    <button class="btn btn-primary btn-sm" onclick="sendReply()">Enviar</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 3: CONFIGURAÇÕES
+══════════════════════════════════ -->
+<div class="screen hidden safe-top" id="screenSettings">
+  <div class="hdr">
+    <button class="hdr-back" onclick="closeSettings()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar
+    </button>
+    <span style="color:#fff;font-size:16px;font-weight:800;margin-left:8px;">Configurações</span>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding-bottom:32px;" class="safe-bot">
+    <div class="settings-section" style="margin-top:16px;">
+      <div class="settings-title">Provedor de IA</div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-row-key" id="settingsProviderName">Claude (Anthropic)</div>
+          <div class="settings-row-val" id="settingsProviderKey">Nenhuma chave</div>
+        </div>
+        <span class="settings-row-action" onclick="openApiModal()">Alterar</span>
+      </div>
+    </div>
+    <div class="settings-section" style="margin-top:16px;">
+      <div class="settings-title">Histórico</div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-row-key" id="settingsClientCount">0 clientes salvos</div>
+          <div class="settings-row-val">Armazenado no navegador</div>
+        </div>
+        <span class="settings-row-action" style="color:var(--error)" onclick="clearAllData()">Limpar tudo</span>
+      </div>
+    </div>
+    <div class="settings-section" style="margin-top:16px;">
+      <div class="settings-title">Como exportar do WhatsApp</div>
+      <div class="card" style="margin:0;">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="width:24px;height:24px;background:var(--lime);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--carbon);flex-shrink:0;">1</div>
+            <div style="font-size:13px;color:var(--carbon-60);line-height:1.5;">Abre o grupo no WhatsApp e toca nos 3 pontinhos (⋮)</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="width:24px;height:24px;background:var(--lime);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--carbon);flex-shrink:0;">2</div>
+            <div style="font-size:13px;color:var(--carbon-60);line-height:1.5;">Toca em <b>Mais</b> → <b>Exportar conversa</b> → <b>Sem mídia</b></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div style="width:24px;height:24px;background:var(--lime);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--carbon);flex-shrink:0;">3</div>
+            <div style="font-size:13px;color:var(--carbon-60);line-height:1.5;">Compartilha o arquivo .zip direto para este painel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     MODAL: API KEY
+══════════════════════════════════ -->
+<div class="modal-overlay center" id="apiModal">
+  <div class="modal-sheet center-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="width:32px;height:32px;background:var(--lime);border-radius:var(--r6);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--carbon)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <span style="font-size:16px;font-weight:800;color:var(--carbon);">CS Desk · Chatfor</span>
+    </div>
+    <div class="modal-title">Configure a IA</div>
+    <div class="modal-sub">Escolha o provedor e cole sua chave. Fica salva só no seu celular.</div>
+    <label class="field-lbl">Provedor de IA</label>
+    <div class="prov-row">
+      <div class="prov-btn active" id="btnClaude" onclick="selectProvider('claude')">
+        <div style="font-size:22px;">🟣</div>
+        <div class="pn">Claude</div>
+        <div class="ps">Anthropic</div>
+      </div>
+      <div class="prov-btn" id="btnOpenai" onclick="selectProvider('openai')">
+        <div style="font-size:22px;">⚫</div>
+        <div class="pn">GPT-4o</div>
+        <div class="ps">OpenAI</div>
+      </div>
+    </div>
+    <div class="prov-panel active" id="panelClaude">
+      <label class="field-lbl">Chave da Claude API</label>
+      <input class="field-input" type="password" id="claudeKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
+      <div class="field-note">Acesse <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key</div>
+    </div>
+    <div class="prov-panel" id="panelOpenai">
+      <label class="field-lbl">Chave da OpenAI API</label>
+      <input class="field-input" type="password" id="openaiKeyInput" placeholder="sk-proj-..." autocomplete="off">
+      <div class="field-note">Acesse <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> → Create new secret key</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-primary" style="flex:1" onclick="saveKey()">Começar agora</button>
+      <button class="btn btn-ghost" onclick="skipKey()">Demo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     MODAL: MENU DO CLIENTE
+══════════════════════════════════ -->
+<div class="modal-overlay" id="clientMenuModal" style="display:none">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;" id="clientMenuContent"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+// STATE
+// ════════════════════════════════
+let clients = [];
+let selectedId = null;
+let apiKey = '';
+let aiProvider = 'claude';
+let demoMode = false;
+let filterQ = '';
+
+// ════════════════════════════════
+// PERSISTÊNCIA — localStorage
+// ════════════════════════════════
+const DB_KEY = 'csdesk_clients_v1';
+
+function saveClients() {
+  try {
+    // Salva tudo exceto o texto bruto (economiza espaço)
+    const toSave = clients.map(c => ({...c, rawText: undefined}));
+    localStorage.setItem(DB_KEY, JSON.stringify(toSave));
+  } catch(e) { console.warn('Erro ao salvar:', e); }
+}
+
+function loadClients() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) clients = JSON.parse(raw);
+  } catch(e) { clients = []; }
+}
+
+function clearAllData() {
+  if (!confirm('Apagar todos os clientes salvos?')) return;
+  clients = [];
+  selectedId = null;
+  localStorage.removeItem(DB_KEY);
+  updateStats(); renderList();
+  updateSettingsInfo();
+}
+
+// ════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    if (s.id === id) { s.classList.remove('hidden','slide-left'); }
+    else if (!s.classList.contains('hidden')) { s.classList.add('slide-left'); setTimeout(()=>s.classList.add('hidden'),200); }
+  });
+}
+
+function goBack() {
+  showScreen('screenList');
+  setTimeout(()=>{ document.getElementById('screenDetail').classList.remove('slide-left'); },250);
+}
+
+function openSettings() { showScreen('screenSettings'); updateSettingsInfo(); }
+function closeSettings() { showScreen('screenList'); }
+
+// ════════════════════════════════
+// PROVIDER & API KEY
+// ════════════════════════════════
+function selectProvider(p) {
+  aiProvider = p;
+  ['claude','openai'].forEach(x => {
+    document.getElementById('btn'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active', x===p);
+    document.getElementById('panel'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active', x===p);
+  });
+}
+
+function openApiModal() { document.getElementById('apiModal').style.display='flex'; }
+
+function saveKey() {
+  if (aiProvider === 'claude') {
+    const k = document.getElementById('claudeKeyInput').value.trim();
+    if (!k.startsWith('sk-ant')) { alert('Chave Claude inválida. Deve começar com sk-ant-...'); return; }
+    apiKey = k;
+  } else {
+    const k = document.getElementById('openaiKeyInput').value.trim();
+    if (!k.startsWith('sk-')) { alert('Chave OpenAI inválida. Deve começar com sk-...'); return; }
+    apiKey = k;
+  }
+  try { localStorage.setItem('cs_api_key', apiKey); localStorage.setItem('cs_provider', aiProvider); } catch(e){}
+  demoMode = false;
+  document.getElementById('apiModal').style.display = 'none';
+  updateSettingsInfo();
+}
+
+function skipKey() {
+  demoMode = true;
+  document.getElementById('apiModal').style.display = 'none';
+}
+
+function updateSettingsInfo() {
+  const pname = aiProvider === 'openai' ? 'GPT-4o (OpenAI)' : 'Claude (Anthropic)';
+  document.getElementById('settingsProviderName').textContent = pname;
+  document.getElementById('settingsProviderKey').textContent = apiKey ? apiKey.slice(0,12)+'••••••' : 'Nenhuma chave configurada';
+  document.getElementById('settingsClientCount').textContent = `${clients.length} cliente${clients.length!==1?'s':''} salvos`;
+}
+
+// ════════════════════════════════
+// FILE HANDLING
+// ════════════════════════════════
+function handleDrop(e) {
+  e.preventDefault();
+  handleFiles(e.dataTransfer.files);
+}
+function handleFiles(files) {
+  [...files].forEach(f => {
+    if (f.name.endsWith('.zip')) readZip(f);
+    else if (f.name.endsWith('.txt')) readTxt(f);
+    else alert('Use .zip ou .txt exportado do WhatsApp.');
+  });
+}
+async function readZip(file) {
+  try {
+    const zip = await JSZip.loadAsync(file);
+    const txts = Object.keys(zip.files).filter(n => n.endsWith('.txt') && !zip.files[n].dir);
+    if (!txts.length) { alert('Nenhum .txt encontrado no .zip.'); return; }
+    const txt = await zip.files[txts[0]].async('string');
+    const name = cleanName(file.name.replace(/\.zip$/i,''));
+    processConversation(name, txt, file.name);
+  } catch(e) { alert('Erro ao ler .zip: ' + e.message); }
+}
+function readTxt(file) {
+  const r = new FileReader();
+  r.onload = e => { const name = cleanName(file.name.replace(/\.txt$/i,'')); processConversation(name, e.target.result, file.name); };
+  r.onerror = () => alert('Erro ao ler o arquivo.');
+  r.readAsText(file, 'UTF-8');
+}
+function cleanName(n) {
+  return n.replace(/WhatsApp Chat with |Conversa do WhatsApp com /gi,'').replace(/_/g,' ').trim() || n;
+}
+
+// ════════════════════════════════
+// PARSE WHATSAPP
+// ════════════════════════════════
+function parseWA(text) {
+  const lines = text.split('\n');
+  const msgs = [];
+  const pats = [
+    /^(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2})\s*[-–]\s*(.+?):\s+(.+)$/,
+    /^\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\]\s*(.+?):\s+(.+)$/,
+    /^(\d{1,2}\/\d{1,2}\/\d{2,4})\s+(\d{1,2}:\d{2})\s+-\s+(.+?):\s+(.+)$/,
+  ];
+  for (const line of lines) {
+    for (const re of pats) {
+      const m = line.match(re);
+      if (m) { msgs.push({date:m[1],time:m[2],author:m[3].trim(),text:m[4].trim()}); break; }
+    }
+  }
+  const participants = [...new Set(msgs.map(m=>m.author))].filter(p=>p.length<50 && !p.match(/sistema|Messages|added|removed|changed|left|joined/i));
+  return { raw:text.slice(0,9000), msgs, participants, lastMsgs:msgs.slice(-40) };
+}
+
+// ════════════════════════════════
+// AI ANALYSIS
+// ════════════════════════════════
+function buildPrompt(clientName, preview, parsed) {
+  return `Você é especialista em Customer Success. Analise a conversa do grupo "${clientName}" e retorne SOMENTE JSON válido, sem markdown.
+
+CONVERSA:
+${preview}
+
+JSON esperado:
+{"status":"saudavel"|"atencao"|"risco","statusLabel":"SAUDÁVEL"|"ATENÇÃO"|"RISCO","health":<0-100>,"aiSummary":"<3-4 frases sobre o cliente, humor, riscos, oportunidades>","preview":"<1 frase da última interação>","tags":["<tag1>","<tag2>","<tag3>"],"tagTypes":["ok"|"warn"|"hot","ok"|"warn"|"hot","ok"|"warn"|"hot"],"suggestion":"<resposta pronta para enviar no grupo>","alerts":["<alerta se houver>"],"keyTopics":["<tópico1>","<tópico2>"],"lastActivity":"<hoje|ontem|há X dias>","participants":${JSON.stringify(parsed.participants.slice(0,6))}}`;
+}
+
+async function analyzeWithClaude(clientName, parsed) {
+  const preview = parsed.lastMsgs.length ? parsed.lastMsgs.map(m=>`${m.author}: ${m.text}`).join('\n') : parsed.raw.slice(0,4000);
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:buildPrompt(clientName,preview,parsed)}]})
+  });
+  if (!res.ok) throw new Error(`Claude ${res.status}`);
+  const d = await res.json();
+  return JSON.parse((d.content?.map(b=>b.text||'').join('')||'').replace(/```json|```/g,'').trim());
+}
+
+async function analyzeWithOpenAI(clientName, parsed) {
+  const preview = parsed.lastMsgs.length ? parsed.lastMsgs.map(m=>`${m.author}: ${m.text}`).join('\n') : parsed.raw.slice(0,4000);
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+    body:JSON.stringify({model:'gpt-4o',max_tokens:1000,response_format:{type:'json_object'},messages:[{role:'system',content:'Você é especialista em CS. Responda SOMENTE com JSON válido.'},{role:'user',content:buildPrompt(clientName,preview,parsed)}]})
+  });
+  if (!res.ok) throw new Error(`OpenAI ${res.status}`);
+  const d = await res.json();
+  return JSON.parse((d.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim());
+}
+
+function demoAnalysis(name) {
+  const opts=['saudavel','atencao','risco'];
+  const s=opts[Math.floor(Math.random()*3)];
+  const h=s==='saudavel'?80+Math.floor(Math.random()*20):s==='atencao'?40+Math.floor(Math.random()*30):5+Math.floor(Math.random()*30);
+  return {status:s,statusLabel:s==='saudavel'?'SAUDÁVEL':s==='atencao'?'ATENÇÃO':'RISCO',health:h,
+    aiSummary:`[DEMO] Cliente ${name}. Configure sua API key em Configurações para análise real das conversas.`,
+    preview:'Análise de demonstração ativa',tags:['demo','cs','chatfor'],tagTypes:['neu','neu','ok'],
+    suggestion:`Oi pessoal! Como posso ajudar hoje?`,alerts:s!=='saudavel'?['Configure a API key para análise real']:[],
+    keyTopics:['suporte','dúvida'],lastActivity:'hoje',participants:[name,'Você']};
+}
+
+// ════════════════════════════════
+// PROCESS CONVERSATION
+// ════════════════════════════════
+async function processConversation(clientName, text, fileName) {
+  // Verifica se já existe
+  const existing = clients.find(c => c.name.toLowerCase() === clientName.toLowerCase());
+
+  setProgress(true, `Analisando ${clientName}...`, 25);
+  const parsed = parseWA(text);
+  setProgress(true, `IA lendo o grupo...`, 60);
+
+  let analysis;
+  try {
+    if (demoMode || !apiKey) analysis = demoAnalysis(clientName);
+    else if (aiProvider === 'openai') analysis = await analyzeWithOpenAI(clientName, parsed);
+    else analysis = await analyzeWithClaude(clientName, parsed);
+  } catch(e) {
+    console.error(e);
+    analysis = demoAnalysis(clientName);
+    analysis.aiSummary = `Erro: ${e.message}. Verifique sua chave em Configurações.`;
+  }
+
+  setProgress(true, 'Ficha gerada!', 100);
+  setTimeout(() => setProgress(false), 800);
+
+  const palette = ['#99ea48','#f59e0b','#818cf8','#22c55e','#f97316','#e879f9','#06b6d4'];
+  const initials = clientName.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'??';
+
+  if (existing) {
+    // Atualiza existente
+    Object.assign(existing, { parsed, fileName, updatedAt: Date.now(), ...analysis });
+  } else {
+    const color = palette[clients.length % palette.length];
+    clients.unshift({ id: Date.now(), name:clientName, initials, color, fileName, parsed, createdAt:Date.now(), updatedAt:Date.now(), ...analysis });
+  }
+
+  saveClients();
+  updateStats();
+  renderList();
+
+  // Abre o detalhe automaticamente
+  const c = clients.find(cl => cl.name.toLowerCase() === clientName.toLowerCase());
+  if (c) { selectedId = c.id; renderDetail(); showScreen('screenDetail'); }
+}
+
+function setProgress(show, label='', pct=0) {
+  document.getElementById('progressWrap').style.display = show ? 'block' : 'none';
+  if (show) { document.getElementById('progLabel').textContent=label; document.getElementById('progFill').style.width=pct+'%'; }
+}
+
+// ════════════════════════════════
+// STATS
+// ════════════════════════════════
+function updateStats() {
+  document.getElementById('cntS').textContent = clients.filter(c=>c.status==='saudavel').length;
+  document.getElementById('cntA').textContent = clients.filter(c=>c.status==='atencao').length;
+  document.getElementById('cntR').textContent = clients.filter(c=>c.status==='risco').length;
+}
+
+// ════════════════════════════════
+// CLIENT LIST
+// ════════════════════════════════
+function filterClients(q) { filterQ=q; renderList(); }
+
+function renderList() {
+  const f = clients.filter(c => c.name.toLowerCase().includes(filterQ.toLowerCase()));
+  const el = document.getElementById('clientList');
+
+  if (!f.length) {
+    el.innerHTML = `<div class="empty-list">
+      <div class="empty-list-icon">💬</div>
+      <div class="empty-list-title">${clients.length ? 'Nenhum resultado' : 'Nenhum cliente ainda'}</div>
+      <div class="empty-list-sub">${clients.length ? 'Tente outro termo.' : 'Suba uma conversa exportada do WhatsApp para começar.'}</div>
+    </div>`;
+    return;
+  }
+
+  const sc = c => c.status==='saudavel'?'s':c.status==='atencao'?'a':'r';
+  const isNew = c => (Date.now() - (c.updatedAt||c.createdAt||0)) < 3600000;
+
+  el.innerHTML = f.map(c=>`
+    <div class="ci ${c.id===selectedId?'active':''}" onclick="openClient(${c.id})">
+      <div class="ci-av" style="background:${c.color}22;color:${c.color}">${c.initials}</div>
+      <div class="ci-body">
+        <div class="ci-name">${c.name}</div>
+        <div class="ci-prev">${c.preview||'—'}</div>
+      </div>
+      <div class="ci-right">
+        <span class="badge ${sc(c)}">${c.statusLabel}</span>
+        <span class="ci-time">${c.lastActivity||''}</span>
+        ${isNew(c)?'<span class="ci-new"></span>':''}
+      </div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════
+// DETAIL VIEW
+// ════════════════════════════════
+function openClient(id) {
+  selectedId = id;
+  renderList();
+  renderDetail();
+  showScreen('screenDetail');
+}
+
+function renderDetail() {
+  const c = clients.find(cl=>cl.id===selectedId);
+  if (!c) return;
+  const sc = c.status==='saudavel'?'s':c.status==='atencao'?'a':'r';
+  const hc = c.health>70?'var(--success)':c.health>40?'var(--warning)':'var(--error)';
+
+  // Header info
+  document.getElementById('detailHeaderInfo').innerHTML = `
+    <div class="detail-av" style="background:${c.color}22;color:${c.color};display:inline-flex;margin-right:8px;">${c.initials}</div>
+    <span class="badge ${sc}">${c.statusLabel}</span>`;
+
+  // Alerts
+  const alertsHtml = (c.alerts||[]).filter(a=>a).length ? `
+    <div class="card fade-up">
+      <div class="card-lbl">Alertas</div>
+      ${c.alerts.filter(a=>a).map(a=>`
+        <div class="alert-item ${sc}">
+          <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div class="alert-text">${a}</div>
+        </div>`).join('')}
+    </div>` : '';
+
+  const tagsHtml = (c.tags||[]).map((t,i)=>`<span class="tag ${(c.tagTypes||[])[i]||'neu'}">${t}</span>`).join('');
+
+  const tlHtml = (c.parsed?.lastMsgs||[]).slice(-8).map(m=>`
+    <div class="tl-item">
+      <div class="tl-dot msg"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      <div>
+        <div class="tl-who">${m.author}</div>
+        <div class="tl-msg">${m.text.slice(0,120)}${m.text.length>120?'…':''}</div>
+        <div class="tl-time">${m.date||''} ${m.time||''}</div>
+      </div>
+    </div>`).join('') || `<div style="font-size:13px;color:var(--n50);">Faça um novo upload para ver as mensagens do grupo.</div>`;
+
+  document.getElementById('detailBody').innerHTML = `
+    ${alertsHtml}
+
+    <div class="card fade-up">
+      <div class="card-lbl"><span>Resumo da IA</span><span class="card-lbl-accent">agora</span></div>
+      <div class="ai-box">
+        <div class="ai-lbl"><span class="ai-dot"></span> Análise da conversa</div>
+        <div class="ai-text">${c.aiSummary||''}</div>
+        <div class="tag-row">${tagsHtml}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card fade-up">
+      <div class="kpi-lbl">Saúde da conta</div>
+      <div class="kpi-row">
+        <div class="kpi-n">${c.health}</div>
+        <div class="kpi-of">/100</div>
+      </div>
+      <div class="health-bar"><div class="health-fill" style="width:${c.health}%;background:${hc}"></div></div>
+    </div>
+
+    <div class="card fade-up">
+      <div class="card-lbl">Sugestão de resposta</div>
+      <div class="sug-box">
+        <div class="sug-text">${c.suggestion||''}</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="useSuggestion(${c.id})">Usar sugestão</button>
+        <button class="btn btn-ghost btn-sm" onclick="copySuggestion(${c.id})">Copiar</button>
+      </div>
+    </div>
+
+    <div class="card fade-up">
+      <div class="card-lbl">Ficha do cliente</div>
+      <div class="info-row"><span class="info-k">Participantes</span><span class="info-v">${(c.participants||[]).length}</span></div>
+      <div class="info-row"><span class="info-k">Última atividade</span><span class="info-v">${c.lastActivity||'—'}</span></div>
+      <div class="info-row"><span class="info-k">Tópicos</span><span class="info-v">${(c.keyTopics||[]).join(', ')||'—'}</span></div>
+      <div class="info-row"><span class="info-k">Arquivo</span><span class="info-v">${c.fileName||'—'}</span></div>
+      <div class="info-row"><span class="info-k">Analisado</span><span class="info-v">${c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('pt-BR') : '—'}</span></div>
+    </div>
+
+    <div class="card fade-up">
+      <div class="card-lbl">Últimas mensagens</div>
+      ${tlHtml}
+    </div>
+
+    <div style="height:8px;"></div>
+  `;
+}
+
+// ════════════════════════════════
+// CLIENT ACTIONS
+// ════════════════════════════════
+function useSuggestion(id) {
+  const c = clients.find(cl=>cl.id===id);
+  if (c) document.getElementById('replyInput').value = c.suggestion||'';
+}
+function copySuggestion(id) {
+  const c = clients.find(cl=>cl.id===id);
+  if (c && c.suggestion) {
+    navigator.clipboard.writeText(c.suggestion).then(()=>alert('Copiado!')).catch(()=>alert(c.suggestion));
+  }
+}
+function sendReply() {
+  const input = document.getElementById('replyInput');
+  if (input.value.trim()) { alert('Resposta anotada. Com integração ao WhatsApp, seria enviada direto para o grupo.'); input.value=''; }
+}
+
+function openClientMenu() {
+  const c = clients.find(cl=>cl.id===selectedId);
+  if (!c) return;
+  document.getElementById('clientMenuContent').innerHTML = `
+    <div style="font-size:16px;font-weight:800;color:var(--carbon);margin-bottom:4px;">${c.name}</div>
+    <div style="font-size:13px;color:var(--n50);margin-bottom:16px;">Última análise: ${c.updatedAt?new Date(c.updatedAt).toLocaleDateString('pt-BR'):'—'}</div>
+    <button class="btn btn-outline btn-full" onclick="reanalyzePrompt(${c.id})">Reenviar arquivo para reanalisar</button>
+    <button class="btn btn-ghost btn-full" onclick="exportFicha(${c.id});closeClientMenu()">Exportar ficha .txt</button>
+    <button class="btn btn-danger btn-full" onclick="removeClient(${c.id})">Remover cliente</button>
+    <button class="btn btn-ghost btn-full" onclick="closeClientMenu()">Cancelar</button>
+  `;
+  document.getElementById('clientMenuModal').style.display='flex';
+}
+function closeClientMenu() { document.getElementById('clientMenuModal').style.display='none'; }
+
+function reanalyzePrompt(id) {
+  closeClientMenu();
+  document.getElementById('fileInput').click();
+}
+
+function removeClient(id) {
+  closeClientMenu();
+  if (!confirm('Remover este cliente do histórico?')) return;
+  clients = clients.filter(c=>c.id!==id);
+  selectedId = null;
+  saveClients(); updateStats(); renderList();
+  showScreen('screenList');
+}
+
+function exportFicha(id) {
+  const c = clients.find(cl=>cl.id===id);
+  if (!c) return;
+  const txt = `FICHA DO CLIENTE — ${c.name}\n${'='.repeat(40)}\nStatus: ${c.statusLabel}\nSaúde: ${c.health}/100\nÚltima atividade: ${c.lastActivity}\nParticipantes: ${(c.participants||[]).join(', ')}\n\nRESUMO DA IA:\n${c.aiSummary}\n\nTÓPICOS CHAVE:\n${(c.keyTopics||[]).join(', ')}\n\nSUGESTÃO DE RESPOSTA:\n${c.suggestion}\n\nALERTAS:\n${(c.alerts||[]).join('\n')||'Nenhum'}\n\nAnalisado em: ${c.updatedAt?new Date(c.updatedAt).toLocaleString('pt-BR'):'—'}`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download = `ficha_${c.name.replace(/\s+/g,'_')}.txt`;
+  a.click();
+}
+
+// ════════════════════════════════
+// INIT
+// ════════════════════════════════
+(function init() {
+  try {
+    const k = localStorage.getItem('cs_api_key');
+    const p = localStorage.getItem('cs_provider') || 'claude';
+    if (k) { apiKey=k; aiProvider=p; selectProvider(p); document.getElementById('apiModal').style.display='none'; }
+  } catch(e){}
+
+  loadClients();
+  updateStats();
+  renderList();
+  updateSettingsInfo();
+
+  // Fechar menu ao tocar fora
+  document.getElementById('clientMenuModal').addEventListener('click', function(e) {
+    if (e.target === this) closeClientMenu();
+  });
+})();
+</script>
+</body>
+</html>
