@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Desk · Chatfor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --lime:#99ea48;
+  --lime-10:#f0fce0;
+  --lime-20:#d4f5a0;
+  --lime-70:#6bc420;
+  --carbon:#0d0d0d;
+  --carbon-80:#1a1a1a;
+  --carbon-60:#333333;
+  --snow:#fafafa;
+  --neutral-50:#737373;
+  --neutral-30:#b3b3b3;
+  --neutral-10:#f0f0f0;
+  --border:#e5e5e5;
+  --success:#22c55e;
+  --success-bg:#f0fdf4;
+  --warning:#f59e0b;
+  --warning-bg:#fffbeb;
+  --error:#ef4444;
+  --error-bg:#fef2f2;
+  --info:#3b82f6;
+  --font-sans:'Plus Jakarta Sans',sans-serif;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:24px; --r-pill:9999px;
+  --shadow-subtle:0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.12);
+  --t-fast:120ms; --t-base:200ms; --t-slow:300ms;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+}
+body{background:var(--snow);color:var(--carbon);font-family:var(--font-sans);font-size:15px;line-height:1.5;min-height:100vh;overflow:hidden;}
+
+/* ── LAYOUT ── */
+.shell{display:flex;height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:280px;min-width:280px;background:var(--carbon);display:flex;flex-direction:column;overflow:hidden;}
+
+.sb-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.logo-wrap{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:32px;height:32px;background:var(--lime);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;}
+.logo-icon svg{width:18px;height:18px;stroke:var(--carbon);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.logo-text{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;}
+.logo-sub{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--lime);margin-left:auto;font-family:var(--font-sans);}
+
+.sb-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.08);}
+.stat{background:var(--carbon-80);padding:14px 8px;text-align:center;}
+.stat-n{font-family:var(--font-display);font-size:22px;font-weight:700;line-height:1;}
+.stat-n.s{color:var(--lime);}
+.stat-n.a{color:var(--warning);}
+.stat-n.r{color:var(--error);}
+.stat-l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--neutral-50);margin-top:4px;}
+
+/* ── UPLOAD ── */
+.upload-wrap{padding:16px;}
+.upload-zone{border:1.5px dashed rgba(153,234,72,0.3);border-radius:var(--r-md);padding:18px 12px;text-align:center;cursor:pointer;transition:all var(--t-base) var(--ease);background:rgba(153,234,72,0.03);}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--lime);background:rgba(153,234,72,0.07);}
+.upload-zone input{display:none;}
+.upload-icon{margin-bottom:8px;}
+.upload-icon svg{width:24px;height:24px;stroke:var(--lime);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.upload-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
+.upload-sub{font-size:11px;color:var(--neutral-50);line-height:1.5;}
+.upload-types{display:flex;gap:6px;justify-content:center;margin-top:10px;}
+.type-pill{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:var(--r-pill);background:rgba(255,255,255,0.07);color:var(--neutral-30);}
+
+/* ── PROGRESS ── */
+.prog-wrap{padding:0 16px 12px;}
+.prog-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--neutral-50);margin-bottom:6px;font-family:var(--font-sans);}
+.prog-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--lime);border-radius:2px;transition:width var(--t-slow) var(--ease);}
+
+/* ── SEARCH ── */
+.sb-search{padding:0 16px 10px;}
+.sb-search input{width:100%;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:var(--r-sm);padding:9px 12px;color:#fff;font-family:var(--font-sans);font-size:13px;outline:none;transition:border-color var(--t-fast) var(--ease);}
+.sb-search input:focus{border-color:var(--lime);box-shadow:0 0 0 3px rgba(153,234,72,0.15);}
+.sb-search input::placeholder{color:var(--neutral-50);}
+
+/* ── CLIENT LIST ── */
+.client-list{overflow-y:auto;flex:1;padding:0 8px 16px;}
+.client-list::-webkit-scrollbar{width:3px;}
+.client-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+
+.ci{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);cursor:pointer;transition:background var(--t-fast) var(--ease);margin-bottom:2px;border:1px solid transparent;}
+.ci:hover{background:rgba(255,255,255,0.05);}
+.ci.active{background:rgba(153,234,72,0.08);border-color:rgba(153,234,72,0.25);}
+.ci-av{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
+.ci-info{flex:1;min-width:0;}
+.ci-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-prev{font-size:11px;color:var(--neutral-50);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:var(--r-xs);}
+.badge.s{background:var(--lime-20);color:var(--lime-70);}
+.badge.a{background:#fef3c7;color:#92400e;}
+.badge.r{background:#fee2e2;color:#b91c1c;}
+.badge.p{background:rgba(153,234,72,0.15);color:var(--lime);}
+.ci-time{font-size:10px;color:var(--neutral-50);font-family:var(--font-mono);}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--snow);}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);background:#fff;min-height:72px;box-shadow:var(--shadow-subtle);}
+.tb-left{display:flex;align-items:center;gap:14px;}
+.tb-av{width:44px;height:44px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;}
+.tb-name{font-size:18px;font-weight:800;color:var(--carbon);}
+.tb-sub{font-size:12px;color:var(--neutral-50);margin-top:2px;font-family:var(--font-mono);}
+.tb-actions{display:flex;gap:8px;}
+
+.btn{padding:9px 18px;border-radius:var(--r-pill);font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:var(--font-sans);transition:all var(--t-fast) var(--ease);letter-spacing:-.01em;}
+.btn-primary{background:var(--lime);color:var(--carbon);}
+.btn-primary:hover{background:var(--lime-70);color:#fff;}
+.btn-outline{background:transparent;color:var(--carbon);border:1.5px solid var(--carbon);}
+.btn-outline:hover{background:var(--carbon);color:#fff;}
+.btn-ghost{background:var(--neutral-10);color:var(--neutral-50);border:none;}
+.btn-ghost:hover{color:var(--carbon);}
+.btn-danger{background:var(--error-bg);color:var(--error);border:1px solid #fecaca;}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:20px 24px;display:flex;gap:20px;}
+.content::-webkit-scrollbar{width:3px;}
+.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.col-l{flex:1;display:flex;flex-direction:column;gap:16px;}
+.col-r{width:288px;display:flex;flex-direction:column;gap:16px;}
+
+/* ── CARDS ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:24px;box-shadow:var(--shadow-subtle);animation:fadeUp var(--t-slow) var(--ease);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--neutral-50);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.card-title-accent{color:var(--lime-70);}
+
+/* ── AI SUMMARY ── */
+.ai-box{background:var(--lime-10);border:1px solid var(--lime-20);border-left:4px solid var(--lime);border-radius:var(--r-md);padding:16px;}
+.ai-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--lime-70);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ai-pulse{width:6px;height:6px;border-radius:50%;background:var(--lime);animation:pulse 1.8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ai-text{font-size:14px;line-height:1.7;color:var(--carbon-60);}
+
+/* ── TAGS ── */
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 10px;border-radius:var(--r-xs);}
+.tag.ok{background:var(--lime-20);color:var(--lime-70);}
+.tag.warn{background:#fef3c7;color:#92400e;}
+.tag.hot{background:#fee2e2;color:#b91c1c;}
+.tag.neutral{background:var(--neutral-10);color:var(--neutral-50);}
+
+/* ── TIMELINE ── */
+.tl{display:flex;flex-direction:column;}
+.tl-item{display:flex;gap:12px;padding-bottom:14px;position:relative;}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:15px;top:32px;width:1px;height:calc(100% - 14px);background:var(--border);}
+.tl-dot{width:30px;height:30px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.tl-dot svg{width:14px;height:14px;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+.tl-dot.msg{background:var(--neutral-10);}
+.tl-dot.msg svg{stroke:var(--neutral-50);}
+.tl-dot.ai{background:var(--lime-10);}
+.tl-dot.ai svg{stroke:var(--lime-70);}
+.tl-dot.alert{background:var(--warning-bg);}
+.tl-dot.alert svg{stroke:var(--warning);}
+.tl-who{font-size:12px;font-weight:700;color:var(--carbon);}
+.tl-msg{font-size:12px;color:var(--neutral-50);margin-top:2px;line-height:1.5;}
+.tl-time{font-size:11px;color:var(--neutral-30);margin-top:3px;font-family:var(--font-mono);}
+
+/* ── SUGGESTION ── */
+.sug-box{background:var(--neutral-10);border-radius:var(--r-sm);padding:14px;}
+.sug-text{font-size:13px;line-height:1.7;color:var(--carbon-60);white-space:pre-wrap;}
+.sug-actions{display:flex;gap:8px;margin-top:12px;}
+
+/* ── INFO ROWS ── */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.info-row:last-child{border-bottom:none;}
+.info-k{font-size:12px;color:var(--neutral-50);}
+.info-v{font-size:13px;font-weight:700;color:var(--carbon);text-align:right;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── KPI CARD ── */
+.kpi-card{background:var(--carbon);border-radius:var(--r-md);padding:20px;}
+.kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--neutral-50);margin-bottom:8px;}
+.kpi-n{font-family:var(--font-display);font-size:48px;font-weight:700;color:var(--lime);line-height:1;}
+.kpi-sub{font-size:12px;color:var(--neutral-50);margin-top:6px;}
+.health-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:12px;overflow:hidden;}
+.health-fill{height:100%;border-radius:2px;transition:width .6s var(--ease);}
+
+/* ── ALERT ── */
+.alert-item{display:flex;gap:12px;padding:12px;border-radius:var(--r-sm);margin-bottom:8px;border-left:4px solid;}
+.alert-item.r{background:var(--error-bg);border-color:var(--error);}
+.alert-item.a{background:var(--warning-bg);border-color:var(--warning);}
+.alert-item svg{width:16px;height:16px;flex-shrink:0;margin-top:2px;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+.alert-item.r svg{stroke:var(--error);}
+.alert-item.a svg{stroke:var(--warning);}
+.alert-title{font-size:13px;font-weight:700;color:var(--carbon);margin-bottom:2px;}
+.alert-text{font-size:12px;color:var(--neutral-50);line-height:1.5;}
+
+/* ── EMPTY ── */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:48px;}
+.empty svg{width:48px;height:48px;stroke:var(--neutral-30);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.empty-title{font-size:20px;font-weight:800;color:var(--carbon);}
+.empty-sub{font-size:15px;color:var(--neutral-50);max-width:360px;line-height:1.7;}
+.empty-steps{background:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:20px 24px;text-align:left;max-width:360px;box-shadow:var(--shadow-subtle);}
+.step{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+.step:last-child{border-bottom:none;}
+.step-n{width:22px;height:22px;border-radius:50%;background:var(--lime);color:var(--carbon);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-text{font-size:13px;color:var(--carbon-60);line-height:1.5;}
+
+/* ── REPLY BAR ── */
+.reply-bar{padding:14px 24px;border-top:1px solid var(--border);background:#fff;display:flex;gap:10px;align-items:center;}
+.reply-input{flex:1;background:var(--neutral-10);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;color:var(--carbon);font-family:var(--font-sans);font-size:13px;outline:none;transition:border-color var(--t-fast) var(--ease);}
+.reply-input:focus{border-color:var(--lime);box-shadow:0 0 0 3px rgba(153,234,72,0.2);}
+.reply-input::placeholder{color:var(--neutral-30);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(13,13,13,.6);display:flex;align-items:center;justify-content:center;z-index:100;}
+.modal{background:#fff;border-radius:var(--r-lg);padding:32px;width:440px;max-width:90vw;box-shadow:var(--shadow-lg);}
+.modal-logo{display:flex;align-items:center;gap:8px;margin-bottom:20px;}
+.modal-logo-icon{width:28px;height:28px;background:var(--lime);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;}
+.modal-logo-icon svg{width:16px;height:16px;stroke:var(--carbon);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.modal-logo-text{font-size:14px;font-weight:800;color:var(--carbon);}
+.modal-title{font-size:24px;font-weight:800;color:var(--carbon);margin-bottom:6px;letter-spacing:-.02em;}
+.modal-sub{font-size:14px;color:var(--neutral-50);line-height:1.6;margin-bottom:24px;}
+.field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--neutral-50);margin-bottom:6px;display:block;}
+.modal-input{width:100%;background:var(--snow);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;color:var(--carbon);font-family:var(--font-mono);font-size:13px;outline:none;margin-bottom:8px;transition:border-color var(--t-fast) var(--ease);}
+.modal-input:focus{border-color:var(--lime);box-shadow:0 0 0 3px rgba(153,234,72,0.2);}
+.modal-note{font-size:12px;color:var(--neutral-50);line-height:1.6;margin-bottom:20px;}
+.modal-note a{color:var(--lime-70);text-decoration:none;font-weight:700;}
+.modal-actions{display:flex;gap:8px;}
+.provider-selector{display:flex;gap:8px;margin-bottom:20px;}
+.provider-btn{flex:1;padding:10px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:#fff;cursor:pointer;text-align:center;transition:all var(--t-fast) var(--ease);font-family:var(--font-sans);}
+.provider-btn:hover{border-color:var(--lime);}
+.provider-btn.active{border-color:var(--lime);background:var(--lime-10);}
+.provider-btn .prov-name{font-size:13px;font-weight:700;color:var(--carbon);margin-top:4px;}
+.provider-btn .prov-sub{font-size:11px;color:var(--neutral-50);margin-top:2px;}
+.provider-panel{display:none;}
+.provider-panel.active{display:block;}
+</style>
+</head>
+<body>
+
+<!-- MODAL API KEY -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <div class="modal-logo">
+      <div class="modal-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <span class="modal-logo-text">CS Desk · Chatfor</span>
+    </div>
+    <div class="modal-title">Configure a IA</div>
+    <div class="modal-sub">Escolha o provedor e cole sua chave. Fica salva só no seu navegador.</div>
+
+    <label class="field-label">Provedor de IA</label>
+    <div class="provider-selector">
+      <div class="provider-btn active" id="btnClaude" onclick="selectProvider('claude')">
+        <div style="font-size:20px">🟣</div>
+        <div class="prov-name">Claude</div>
+        <div class="prov-sub">Anthropic</div>
+      </div>
+      <div class="provider-btn" id="btnOpenai" onclick="selectProvider('openai')">
+        <div style="font-size:20px">⚫</div>
+        <div class="prov-name">GPT-4o</div>
+        <div class="prov-sub">OpenAI</div>
+      </div>
+    </div>
+
+    <!-- Claude -->
+    <div class="provider-panel active" id="panelClaude">
+      <label class="field-label">Chave da Claude API</label>
+      <input class="modal-input" type="password" id="claudeKeyInput" placeholder="sk-ant-api03-...">
+      <div class="modal-note">
+        Acesse <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key. Custo: ~$0,01 por conversa.
+      </div>
+    </div>
+
+    <!-- OpenAI -->
+    <div class="provider-panel" id="panelOpenai">
+      <label class="field-label">Chave da OpenAI API</label>
+      <input class="modal-input" type="password" id="openaiKeyInput" placeholder="sk-proj-...">
+      <div class="modal-note">
+        Acesse <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> → Create new secret key. Custo: ~$0,01 por conversa.
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1" onclick="saveKey()">Começar agora</button>
+      <button class="btn btn-ghost" onclick="skipKey()">Usar demo</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="logo-wrap">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <span class="logo-text">CS Desk</span>
+        <span class="logo-sub">Chatfor</span>
+      </div>
+    </div>
+
+    <div class="sb-stats">
+      <div class="stat"><div class="stat-n s" id="cntS">0</div><div class="stat-l">Saudável</div></div>
+      <div class="stat"><div class="stat-n a" id="cntA">0</div><div class="stat-l">Atenção</div></div>
+      <div class="stat"><div class="stat-n r" id="cntR">0</div><div class="stat-l">Risco</div></div>
+    </div>
+
+    <div class="upload-wrap">
+      <div class="upload-zone" id="dropZone"
+           onclick="document.getElementById('fileInput').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleDrop(event)">
+        <input type="file" id="fileInput" accept=".txt,.zip" multiple onchange="handleFiles(this.files)">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="upload-title">Subir conversa do grupo</div>
+        <div class="upload-sub">Exportar WhatsApp → Sem mídia</div>
+        <div class="upload-types">
+          <span class="type-pill">.zip</span>
+          <span class="type-pill">.txt</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="prog-wrap" id="progressWrap" style="display:none">
+      <div class="prog-label" id="progLabel">Analisando...</div>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="sb-search">
+      <input type="text" placeholder="Buscar cliente..." oninput="filterClients(this.value)">
+    </div>
+    <div class="client-list" id="clientList"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar" id="topbar">
+      <div class="tb-left">
+        <div style="font-size:14px;color:var(--neutral-50)">← Suba uma conversa para começar</div>
+      </div>
+    </div>
+    <div class="content" id="mainContent">
+      <div class="empty">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <div class="empty-title">Nenhum cliente ainda</div>
+        <div class="empty-sub">Suba a conversa exportada do WhatsApp e a IA gera a ficha do cliente em segundos.</div>
+        <div class="empty-steps">
+          <div class="step"><div class="step-n">1</div><div class="step-text">Abre o grupo no WhatsApp → toca nos 3 pontinhos</div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-text">Mais → Exportar conversa → Sem mídia</div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-text">Compartilha o arquivo .zip ou .txt aqui</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="reply-bar">
+      <input class="reply-input" placeholder="Escrever resposta para o grupo..." id="replyInput">
+      <button class="btn btn-primary" onclick="sendReply()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let clients = [];
+let selected = null;
+let apiKey = '';
+let aiProvider = 'claude'; // 'claude' | 'openai'
+let demoMode = false;
+let filterQ = '';
+
+// ── PROVIDER SELECTOR ──
+function selectProvider(p) {
+  aiProvider = p;
+  document.getElementById('btnClaude').classList.toggle('active', p==='claude');
+  document.getElementById('btnOpenai').classList.toggle('active', p==='openai');
+  document.getElementById('panelClaude').classList.toggle('active', p==='claude');
+  document.getElementById('panelOpenai').classList.toggle('active', p==='openai');
+}
+
+// ── API KEY ──
+function saveKey() {
+  if (aiProvider === 'claude') {
+    const k = document.getElementById('claudeKeyInput').value.trim();
+    if (!k.startsWith('sk-ant')) { alert('Chave Claude inválida. Deve começar com sk-ant-...'); return; }
+    apiKey = k;
+    try { localStorage.setItem('cs_api_key', k); localStorage.setItem('cs_provider','claude'); } catch(e){}
+  } else {
+    const k = document.getElementById('openaiKeyInput').value.trim();
+    if (!k.startsWith('sk-')) { alert('Chave OpenAI inválida. Deve começar com sk-...'); return; }
+    apiKey = k;
+    try { localStorage.setItem('cs_api_key', k); localStorage.setItem('cs_provider','openai'); } catch(e){}
+  }
+  document.getElementById('apiModal').style.display = 'none';
+}
+function skipKey() {
+  demoMode = true;
+  document.getElementById('apiModal').style.display = 'none';
+}
+
+// ── FILE HANDLING ──
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+}
+function handleFiles(files) {
+  [...files].forEach(f => {
+    if (f.name.endsWith('.zip')) readZip(f);
+    else if (f.name.endsWith('.txt')) readTxt(f);
+    else alert('Formato não suportado. Use .zip ou .txt exportado do WhatsApp.');
+  });
+}
+
+// ── READ ZIP ──
+async function readZip(file) {
+  try {
+    const zip = await JSZip.loadAsync(file);
+    const txts = Object.keys(zip.files).filter(n => n.endsWith('.txt'));
+    if (!txts.length) { alert('Nenhum .txt encontrado dentro do .zip.'); return; }
+    const txt = await zip.files[txts[0]].async('string');
+    const name = file.name.replace(/WhatsApp Chat with |\.zip/gi,'').trim();
+    processConversation(name || file.name.replace('.zip',''), txt, file.name);
+  } catch(e) {
+    alert('Erro ao ler o .zip: ' + e.message);
+  }
+}
+
+// ── READ TXT ──
+function readTxt(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const name = file.name.replace(/WhatsApp Chat with |\.txt/gi,'').trim();
+    processConversation(name || file.name.replace('.txt',''), e.target.result, file.name);
+  };
+  reader.onerror = () => alert('Erro ao ler o arquivo.');
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ── PARSE WHATSAPP ──
+function parseWA(text) {
+  const lines = text.split('\n');
+  const msgs = [];
+  // Suporta formatos BR e internacional
+  const patterns = [
+    /^(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2})\s*[-–]\s*(.+?):\s+(.+)$/,
+    /^\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}:\d{2})\]\s*(.+?):\s+(.+)$/,
+  ];
+  for (const line of lines) {
+    for (const re of patterns) {
+      const m = line.match(re);
+      if (m) { msgs.push({ date:m[1], time:m[2], author:m[3].trim(), text:m[4].trim() }); break; }
+    }
+  }
+  const participants = [...new Set(msgs.map(m=>m.author))].filter(p => p.length < 40 && !p.match(/sistema|Messages|added|removed|changed/i));
+  return { raw: text.slice(0, 9000), msgs, participants, lastMsgs: msgs.slice(-40) };
+}
+
+// ── CLAUDE API ──
+async function analyzeWithClaude(clientName, parsed) {
+  const preview = parsed.lastMsgs.length
+    ? parsed.lastMsgs.map(m=>`${m.author}: ${m.text}`).join('\n')
+    : parsed.raw.slice(0, 4000);
+
+  const prompt = buildPrompt(clientName, preview, parsed);
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role:'user', content:prompt }]
+    })
+  });
+  if (!res.ok) throw new Error(`Claude API error ${res.status}`);
+  const data = await res.json();
+  const txt = data.content?.map(b=>b.text||'').join('') || '';
+  return JSON.parse(txt.replace(/```json|```/g,'').trim());
+}
+
+// ── OPENAI API ──
+async function analyzeWithOpenAI(clientName, parsed) {
+  const preview = parsed.lastMsgs.length
+    ? parsed.lastMsgs.map(m=>`${m.author}: ${m.text}`).join('\n')
+    : parsed.raw.slice(0, 4000);
+
+  const prompt = buildPrompt(clientName, preview, parsed);
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      max_tokens: 1000,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: 'Você é um especialista em Customer Success. Responda SOMENTE com JSON válido.' },
+        { role: 'user', content: prompt }
+      ]
+    })
+  });
+  if (!res.ok) throw new Error(`OpenAI API error ${res.status}`);
+  const data = await res.json();
+  const txt = data.choices?.[0]?.message?.content || '';
+  return JSON.parse(txt.replace(/```json|```/g,'').trim());
+}
+
+// ── PROMPT COMPARTILHADO ──
+function buildPrompt(clientName, preview, parsed) {
+  return `Analise a conversa de WhatsApp do grupo do cliente "${clientName}" e retorne SOMENTE um JSON válido, sem markdown, sem texto adicional.
+
+CONVERSA:
+${preview}
+
+Retorne exatamente este JSON:
+{
+  "status": "saudavel" | "atencao" | "risco",
+  "statusLabel": "SAUDÁVEL" | "ATENÇÃO" | "RISCO",
+  "health": <número 0-100>,
+  "aiSummary": "<resumo em 3-4 frases: o que o cliente discute, humor geral, riscos ou oportunidades>",
+  "preview": "<1 frase resumindo a última interação>",
+  "tags": ["<tag1>","<tag2>","<tag3>"],
+  "tagTypes": ["ok"|"warn"|"hot","ok"|"warn"|"hot","ok"|"warn"|"hot"],
+  "suggestion": "<resposta pronta para enviar no grupo, profissional e cordial>",
+  "alerts": ["<alerta1 se houver>"],
+  "keyTopics": ["<tópico1>","<tópico2>"],
+  "lastActivity": "<quando foi a última mensagem: hoje, ontem, há X dias>",
+  "participants": ${JSON.stringify(parsed.participants.slice(0,6))}
+}`;
+}
+
+// ── DEMO ──
+function demoAnalysis(name) {
+  const opts = ['saudavel','atencao','risco'];
+  const s = opts[Math.floor(Math.random()*3)];
+  const h = s==='saudavel'?80+Math.floor(Math.random()*20):s==='atencao'?40+Math.floor(Math.random()*30):5+Math.floor(Math.random()*30);
+  return {
+    status:s, statusLabel:s==='saudavel'?'SAUDÁVEL':s==='atencao'?'ATENÇÃO':'RISCO',
+    health:h,
+    aiSummary:`[DEMO] Cliente ${name}. Configure a Claude API para análise real das conversas do grupo.`,
+    preview:'Análise de demonstração ativa',
+    tags:['demo','exemplo','cs'],
+    tagTypes:['neutral','neutral','ok'],
+    suggestion:`Oi pessoal! Como posso ajudar hoje?`,
+    alerts: s!=='saudavel'?['Configure a API key para análise real']:[],
+    keyTopics:['suporte','dúvida'],
+    lastActivity:'hoje',
+    participants:[name,'Você']
+  };
+}
+
+// ── PROCESS ──
+async function processConversation(clientName, text, fileName) {
+  setProgress(true, `Analisando ${clientName}...`, 20);
+  const parsed = parseWA(text);
+  setProgress(true, `IA lendo conversa de ${clientName}...`, 55);
+
+  let analysis;
+  try {
+    analysis = (demoMode || !apiKey) ? demoAnalysis(clientName)
+      : aiProvider === 'openai' ? await analyzeWithOpenAI(clientName, parsed)
+      : await analyzeWithClaude(clientName, parsed);
+  } catch(e) {
+    console.error(e);
+    analysis = demoAnalysis(clientName);
+    analysis.aiSummary = `Erro na análise: ${e.message}. Verifique sua chave da API.`;
+  }
+
+  setProgress(true, 'Ficha gerada!', 100);
+  setTimeout(() => setProgress(false), 900);
+
+  const initials = clientName.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '??';
+  const palette = ['#99ea48','#f59e0b','#818cf8','#22c55e','#f97316','#e879f9'];
+  const color = palette[clients.length % palette.length];
+
+  const client = { id:Date.now(), name:clientName, initials, color, fileName, parsed, ...analysis };
+  clients.push(client);
+  updateStats(); renderList(); selectClient(client.id);
+}
+
+function setProgress(show, label='', pct=0) {
+  const w = document.getElementById('progressWrap');
+  w.style.display = show ? 'block' : 'none';
+  if (show) {
+    document.getElementById('progLabel').textContent = label;
+    document.getElementById('progFill').style.width = pct+'%';
+  }
+}
+
+// ── STATS ──
+function updateStats() {
+  document.getElementById('cntS').textContent = clients.filter(c=>c.status==='saudavel').length;
+  document.getElementById('cntA').textContent = clients.filter(c=>c.status==='atencao').length;
+  document.getElementById('cntR').textContent = clients.filter(c=>c.status==='risco').length;
+}
+
+// ── LIST ──
+function filterClients(q) { filterQ=q; renderList(); }
+function renderList() {
+  const f = clients.filter(c=>c.name.toLowerCase().includes(filterQ.toLowerCase()));
+  const sc = c => c.status==='saudavel'?'s':c.status==='atencao'?'a':'r';
+  document.getElementById('clientList').innerHTML = f.map(c=>`
+    <div class="ci ${c.id===selected?'active':''}" onclick="selectClient(${c.id})">
+      <div class="ci-av" style="background:${c.color}22;color:${c.color}">${c.initials}</div>
+      <div class="ci-info">
+        <div class="ci-name">${c.name}</div>
+        <div class="ci-prev">${c.preview||''}</div>
+      </div>
+      <div class="ci-meta">
+        <span class="badge ${sc(c)}">${c.statusLabel}</span>
+        <span class="ci-time">${c.lastActivity||''}</span>
+      </div>
+    </div>`).join('') || `<div style="padding:20px;text-align:center;font-size:12px;color:var(--neutral-50)">Nenhum resultado</div>`;
+}
+
+// ── SELECT ──
+function selectClient(id) { selected=id; renderList(); renderMain(); }
+
+// ── RENDER MAIN ──
+function renderMain() {
+  const c = clients.find(cl=>cl.id===selected);
+  if (!c) return;
+  const sc = c.status==='saudavel'?'s':c.status==='atencao'?'a':'r';
+  const hc = c.health>70?'var(--success)':c.health>40?'var(--warning)':'var(--error)';
+
+  document.getElementById('topbar').innerHTML = `
+    <div class="tb-left">
+      <div class="tb-av" style="background:${c.color}22;color:${c.color}">${c.initials}</div>
+      <div>
+        <div class="tb-name">${c.name}</div>
+        <div class="tb-sub">${(c.participants||[]).join(' · ')||'—'} · ${c.lastActivity||''}</div>
+      </div>
+      <span class="badge ${sc}">${c.statusLabel}</span>
+    </div>
+    <div class="tb-actions">
+      <button class="btn btn-ghost" onclick="reanalyze(${c.id})">↻ Reanalisar</button>
+      <button class="btn btn-outline" onclick="exportFicha(${c.id})">Exportar ficha</button>
+      <button class="btn btn-danger" onclick="removeClient(${c.id})">Remover</button>
+    </div>`;
+
+  const alertsHtml = (c.alerts||[]).filter(a=>a).length ? `
+    <div class="card">
+      <div class="card-title">Alertas</div>
+      ${c.alerts.filter(a=>a).map(a=>`
+        <div class="alert-item ${sc}">
+          <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div><div class="alert-title">${a}</div></div>
+        </div>`).join('')}
+    </div>` : '';
+
+  const tagsHtml = (c.tags||[]).map((t,i)=>`<span class="tag ${(c.tagTypes||[])[i]||'neutral'}">${t}</span>`).join('');
+
+  const tlHtml = (c.parsed.lastMsgs||[]).slice(-10).map(m=>`
+    <div class="tl-item">
+      <div class="tl-dot msg">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div>
+        <div class="tl-who">${m.author}</div>
+        <div class="tl-msg">${m.text.slice(0,140)}${m.text.length>140?'…':''}</div>
+        <div class="tl-time">${m.date||''} ${m.time||''}</div>
+      </div>
+    </div>`).join('') || `<div style="font-size:13px;color:var(--neutral-50)">Nenhuma mensagem detectada. O formato do arquivo pode variar por região.</div>`;
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="col-l">
+      ${alertsHtml}
+      <div class="card">
+        <div class="card-title"><span>Resumo da IA</span><span class="card-title-accent">gerado agora</span></div>
+        <div class="ai-box">
+          <div class="ai-label"><span class="ai-pulse"></span> Análise da conversa</div>
+          <div class="ai-text">${c.aiSummary||''}</div>
+          <div class="tag-row">${tagsHtml}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Sugestão de resposta</div>
+        <div class="sug-box">
+          <div class="sug-text">${c.suggestion||''}</div>
+          <div class="sug-actions">
+            <button class="btn btn-primary" onclick="useSuggestion(${c.id})">Usar sugestão</button>
+            <button class="btn btn-ghost" onclick="editSuggestion(${c.id})">Editar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Últimas mensagens</div>
+        <div class="tl">${tlHtml}</div>
+      </div>
+    </div>
+    <div class="col-r">
+      <div class="card">
+        <div class="card-title">Ficha do cliente</div>
+        <div class="info-row"><span class="info-k">Arquivo</span><span class="info-v">${c.fileName}</span></div>
+        <div class="info-row"><span class="info-k">Participantes</span><span class="info-v">${(c.participants||[]).length}</span></div>
+        <div class="info-row"><span class="info-k">Mensagens</span><span class="info-v">${(c.parsed.msgs||[]).length||'—'}</span></div>
+        <div class="info-row"><span class="info-k">Última atividade</span><span class="info-v">${c.lastActivity||'—'}</span></div>
+        <div class="info-row"><span class="info-k">Tópicos</span><span class="info-v">${(c.keyTopics||[]).join(', ')||'—'}</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Saúde da conta</div>
+        <div class="kpi-n">${c.health}</div>
+        <div class="kpi-sub">de 100 pontos</div>
+        <div class="health-bar"><div class="health-fill" style="width:${c.health}%;background:${hc}"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Ações rápidas</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-ghost" style="text-align:left;width:100%">Agendar call</button>
+          <button class="btn btn-ghost" style="text-align:left;width:100%">Criar tarefa</button>
+          <button class="btn btn-outline" style="text-align:left;width:100%" onclick="exportFicha(${c.id})">Exportar ficha</button>
+          ${c.status!=='saudavel'?`<button class="btn btn-primary" style="text-align:left;width:100%">Escalar para gerente</button>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── ACTIONS ──
+function useSuggestion(id) {
+  const c = clients.find(cl=>cl.id===id);
+  if (c) document.getElementById('replyInput').value = c.suggestion||'';
+}
+function editSuggestion(id) {
+  const c = clients.find(cl=>cl.id===id);
+  const novo = prompt('Editar sugestão:', c.suggestion||'');
+  if (novo !== null) { c.suggestion = novo; renderMain(); }
+}
+function removeClient(id) {
+  if (!confirm('Remover este cliente?')) return;
+  clients = clients.filter(c=>c.id!==id);
+  selected = clients.length ? clients[0].id : null;
+  updateStats(); renderList();
+  selected ? renderMain() : resetMain();
+}
+function resetMain() {
+  document.getElementById('topbar').innerHTML = `<div class="tb-left"><div style="font-size:14px;color:var(--neutral-50)">← Suba uma conversa para começar</div></div>`;
+  document.getElementById('mainContent').innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div class="empty-title">Nenhum cliente ainda</div><div class="empty-sub">Faça upload de uma conversa exportada do WhatsApp.</div></div>`;
+}
+async function reanalyze(id) {
+  const c = clients.find(cl=>cl.id===id);
+  if (!c) return;
+  setProgress(true,`Reanalisando ${c.name}...`,30);
+  try {
+    const a = (demoMode||!apiKey) ? demoAnalysis(c.name)
+      : aiProvider === 'openai' ? await analyzeWithOpenAI(c.name, c.parsed)
+      : await analyzeWithClaude(c.name, c.parsed);
+    Object.assign(c,a);
+  } catch(e) { alert('Erro: '+e.message); }
+  setProgress(true,'Pronto!',100);
+  setTimeout(()=>setProgress(false),700);
+  updateStats(); renderList(); renderMain();
+}
+function exportFicha(id) {
+  const c = clients.find(cl=>cl.id===id);
+  if (!c) return;
+  const txt = `FICHA DO CLIENTE — ${c.name}\n${'='.repeat(40)}\nStatus: ${c.statusLabel}\nSaúde: ${c.health}/100\nÚltima atividade: ${c.lastActivity}\nParticipantes: ${(c.participants||[]).join(', ')}\n\nRESUMO DA IA:\n${c.aiSummary}\n\nTÓPICOS CHAVE:\n${(c.keyTopics||[]).join(', ')}\n\nSUGESTÃO DE RESPOSTA:\n${c.suggestion}\n\nALERTAS:\n${(c.alerts||[]).join('\n')||'Nenhum'}`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
+  a.download = `ficha_${c.name.replace(/\s+/g,'_')}.txt`;
+  a.click();
+}
+function sendReply() {
+  const input = document.getElementById('replyInput');
+  const c = clients.find(cl=>cl.id===selected);
+  if (input.value.trim() && c) {
+    alert(`Resposta anotada para ${c.name}.\n\nCom a integração ao WhatsApp ativa, isso seria enviado direto para o grupo.`);
+    input.value='';
+  }
+}
+
+// ── INIT ──
+try {
+  const k = localStorage.getItem('cs_api_key');
+  const p = localStorage.getItem('cs_provider') || 'claude';
+  if (k) { apiKey=k; aiProvider=p; selectProvider(p); document.getElementById('apiModal').style.display='none'; }
+} catch(e){}
+</script>
+</body>
+</html>
